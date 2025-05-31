@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daobizu</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0c8">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+    }
+    .upload {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .file-list {
+      margin-top: 1rem;
+    }
+    .file-item {
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Daobizu</h1>
+  <div class="upload">
+    <label>
+      Selecione um arquivo:
+      <input type="file" id="fileInput" />
+    </label>
+    <select id="category">
+      <option value="notas">Notas de Crédito</option>
+      <option value="empenhos">Empenhos</option>
+    </select>
+    <button onclick="uploadFile()">Enviar</button>
+  </div>
+
+  <div class="file-list" id="fileList"></div>
+
+  <script>
+    const fileList = document.getElementById("fileList");
+    let storedFiles = JSON.parse(localStorage.getItem("daobizuFiles") || "[]");
+
+    function renderFiles() {
+      fileList.innerHTML = '<h2>Arquivos Enviados</h2>';
+      storedFiles.forEach((file, index) => {
+        const link = document.createElement("a");
+        link.href = file.data;
+        link.download = file.name;
+        link.textContent = `${file.category.toUpperCase()} - ${file.name}`;
+        link.className = "file-item";
+        fileList.appendChild(link);
+        fileList.appendChild(document.createElement("br"));
+      });
+    }
+
+    function uploadFile() {
+      const input = document.getElementById("fileInput");
+      const category = document.getElementById("category").value;
+      if (input.files.length > 0) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          storedFiles.push({
+            name: file.name,
+            data: e.target.result,
+            category: category
+          });
+          localStorage.setItem("daobizuFiles", JSON.stringify(storedFiles));
+          renderFiles();
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    renderFiles();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log("Service Worker registrado"))
+        .catch(err => console.log("Erro ao registrar Service Worker:", err));
+    }
+  </script>
+</body>
+</html>
